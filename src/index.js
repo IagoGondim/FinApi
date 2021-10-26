@@ -23,6 +23,7 @@ function verifyIfExistsAccountCPF(request, response, next) {
 //Possivel criar conta e não é possivel cadastar um CPF já existente.
 app.post("/account", (request, response) => {
     const {cpf, name}  = request.body;
+    
     const customerAlreadyExists = customers.some(
         (customer) => customer.cpf === cpf
     );
@@ -30,7 +31,7 @@ app.post("/account", (request, response) => {
 if (customerAlreadyExists){
     return response.status(400).json({error: "Customer already exists!"});
 }
-    const id = uuidv4();
+    //const id = uuidv4();
     customers.push({
         cpf,
         name,
@@ -108,9 +109,38 @@ app.get("/statement/date", verifyIfExistsAccountCPF, (request, response) => {
     return response.json(statement);
 });
 
+//Update da conta
+app.put("/account", verifyIfExistsAccountCPF , (request, response) => {
+    const {name} = request.body;
+    const {customer} = request;
 
+    customer.name = name;
 
+    return response.status(201).send();
 
+})
+
+//Consultar contas
+app.get("/account", verifyIfExistsAccountCPF , (request, response) => {
+    const {customer} = request;
+
+    return response.json(customer);
+});
+//Deletar Contas
+app.delete("/account", verifyIfExistsAccountCPF , (request, response) =>{
+    const{customer} = request;
+
+    //splice
+    customers.splice(customer, 1);
+
+    return response.status(200).json(customers);
+});
+
+app.get("/balance", verifyIfExistsAccountCPF , (request, response) => {
+    const { customer } = request;
+    const balance = getBalance(customer.statement);
+    return response.json(balance);
+})
 
 
 app.listen(3333);
